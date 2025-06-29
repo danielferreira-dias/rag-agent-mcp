@@ -1,9 +1,18 @@
 import asyncio
+from urllib.parse import urldefrag
 from crawl4ai import (AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode,
     MemoryAdaptiveDispatcher)
-from urllib.parse import urldefrag
 
 async def crawl_single_page(url:str):
+    """
+    Asynchronously scrapes a single web page and prints its content in Markdown format.
+
+    This function initializes an AsyncWebCrawler, runs it on the provided URL,
+    and prints the resulting Markdown content to the console.
+
+    Args:
+        url (str): The URL of the web page to scrape.
+    """
     async with AsyncWebCrawler() as crawler:
         result = await crawler.arun(
             url=url,
@@ -11,6 +20,19 @@ async def crawl_single_page(url:str):
         print(result.markdown)
 
 async def crawl_recursive_batch(start_urls, max_depth=3, max_concurrent=10):
+    """
+    Recursively scrapes web pages in batches, starting from a list of initial URLs.
+
+    This function performs a breadth-first crawl up to a specified maximum depth.
+    It uses a memory-adaptive dispatcher to manage concurrent browser sessions
+    and avoids re-visiting URLs.
+
+    Args:
+        start_urls (list[str]): A list of URLs to begin crawling from.
+        max_depth (int, optional): The maximum recursion depth for the crawl. Defaults to 3.
+        max_concurrent (int, optional): The maximum number of concurrent browser
+                                     sessions. Defaults to 10.
+    """
     browser_config = BrowserConfig(headless=True, verbose=False)
     run_config = CrawlerRunConfig(
         cache_mode=CacheMode.BYPASS,
@@ -66,5 +88,4 @@ async def crawl_recursive_batch(start_urls, max_depth=3, max_concurrent=10):
 if __name__ == "__main__":
     url = "https://www.tripadvisor.com/Tourism-g189180-Porto_Porto_District_Northern_Portugal-Vacations.html"
     # asyncio.run(url)
-
     asyncio.run(crawl_recursive_batch([url], max_depth=3, max_concurrent=10))

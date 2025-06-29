@@ -1,7 +1,10 @@
 import asyncio
+import os
+from dotenv import load_dotenv
 from urllib.parse import urldefrag
 from crawl4ai import (AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode,
-    MemoryAdaptiveDispatcher)
+    MemoryAdaptiveDispatcher, LLMConfig)
+from crawl4ai.extraction_strategy import LLMExtractionStrategy
 
 async def crawl_single_page(url:str):
     """
@@ -85,7 +88,12 @@ async def crawl_recursive_batch(start_urls, max_depth=3, max_concurrent=10):
             # Move to the next set of URLs for the next recursion depth
             current_urls = next_level_urls
 
+async def extract_restaurants(url:str):
+    ...
+    
+
 if __name__ == "__main__":
-    url = "https://www.tripadvisor.com/Tourism-g189180-Porto_Porto_District_Northern_Portugal-Vacations.html"
-    # asyncio.run(url)
-    asyncio.run(crawl_recursive_batch([url], max_depth=3, max_concurrent=10))
+    load_dotenv()
+    url = "https://www.google.com/search?q=porto+restaurants&client=firefox-b-d&sca_esv=86c72741684d2a2b&udm=1&sxsrf=AE3TifPt__DT1uW2DpU9qdB4Y6006XwiLw:1751223130198&ei=WothaL3yC9-pkdUPruCXyQ4&start=0&sa=N&sstk=Ac65TH7LbB8oei00wKy9xaZeVdwy6h6HgnvwFuvsZMA9zoli9a0iU7hYDiywJYjXK9ZhG8hl5IzmtDMUJm1h3p2G9XYPr6m1xk2cRagqZzvgvbEg9H0ei0rNCvFd_dkMc2p_&ved=2ahUKEwi9h-TEppeOAxXfVKQEHS7wJek4ChDx0wN6BAgJEAI&biw=2300&bih=1172&dpr=1.09"
+    asyncio.run(crawl_single_page(url))
+    # asyncio.run(crawl_recursive_batch([url], max_depth=3, max_concurrent=10))

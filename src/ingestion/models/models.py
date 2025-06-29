@@ -5,7 +5,7 @@ class Restaurant(BaseModel):
     name: str
     description: Optional[str]
     address: str
-    type: Optional[str]
+    cuisine: Optional[str]
     rating: Optional[float]
     price_range: Optional[str]
 

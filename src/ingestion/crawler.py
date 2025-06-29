@@ -1,99 +1,102 @@
 import asyncio
+import json
 import os
 from dotenv import load_dotenv
 from urllib.parse import urldefrag
 from crawl4ai import (AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode,
     MemoryAdaptiveDispatcher, LLMConfig)
-from crawl4ai.extraction_strategy import LLMExtractionStrategy
+from crawl4ai.extraction_strategy import JsonCssExtractionStrategy, LLMExtractionStrategy
+from .models.models import Restaurant
 
-async def crawl_single_page(url:str):
-    """
-    Asynchronously scrapes a single web page and prints its content in Markdown format.
+sample_html = """
+<div class="vkMWZ _T Fl y">
+    <div class="XIWnB z y">
+        <div class="IcVzi y _T">
+            <div class="vwOkl">
+                <div>
+                    <div class="mfKvs f e">
+                        <div class="UIwAG f k">
+                            <div class="KBZbF f e">
+                                <div class="ZvrsW N G">
+                                    <div class="AeLpB f K _T">
+                                        <div class="PkmeC QA Pb PP Po PC R4">
+                                            <img class="ktayA" src="https://static.tacdn.com/img2/restaurant-awards/Stars/1-Star.svg" alt="One MICHELIN Star">
+                                            <span class="biGQs _P UFJyF Wf">MICHELIN</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ZvrsW N G">
+                                    <a href="/Restaurant_Review-g189180-d1656594-Reviews-Pedro_Lemos_Restaurante-Porto_Porto_District_Northern_Portugal.html" class="BMQDV _F Gv wSSLS SwZTJ FGwzt ukgoS">
+                                        <div class="biGQs _P fiohW alXOW oCpZu GzNcM nvOhm UTQMg ZTpaU mtnKn ngXxk">29. Pedro Lemos Restaurante</div>
+                                    </a>
+                                    <div class="kzrsh">
+                                        <div class="VVbkp">
+                                            <div class="MyMKp u">
+                                                <span aria-hidden="true">
+                                                    <div class="biGQs _P pZUbB hmDzD" data-automation="bubbleRatingValue">
+                                                        <span>4.5</span>
+                                                    </div>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="ZvrsW N G">
+                            <div class="ZvrsW N G biqBm">
+                                <span class="f">
+                                    <svg viewBox="0 0 24 24" width="16px" height="16px" class="d Vb egaXP UmNoP" aria-hidden="true">
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M14.051 6.549v.003l1.134 1.14 3.241-3.25.003-.002 1.134 1.136-3.243 3.252 1.134 1.14a1 1 0 0 0 .09-.008c.293-.05.573-.324.72-.474l.005-.006 2.596-2.603L22 8.016l-2.597 2.604a3.73 3.73 0 0 1-1.982 1.015 4.3 4.3 0 0 1-3.162-.657l-.023-.016-.026-.018-1.366 1.407 8.509 8.512L20.219 22l-.002-.002-6.654-6.663-2.597 2.76-7.3-7.315C1.967 8.948 1.531 6.274 2.524 4.198c.241-.504.566-.973.978-1.386l8.154 8.416 1.418-1.423-.039-.045c-.858-1.002-1.048-2.368-.62-3.595a4.15 4.15 0 0 1 .983-1.561L16 2l1.135 1.138-2.598 2.602-.047.045c-.16.151-.394.374-.433.678zM3.809 5.523c-.362 1.319-.037 2.905 1.06 4.103L10.93 15.7l1.408-1.496zM2.205 20.697 3.34 21.84l4.543-4.552-1.135-1.143z"></path>
+                                    </svg>
+                                    <span class="biGQs _P pZUbB hmDzD">Mediterranean, European</span>
+                                </span>
+                                <span class="biGQs _P pZUbB hmDzD">$$$$</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+"""
 
-    This function initializes an AsyncWebCrawler, runs it on the provided URL,
-    and prints the resulting Markdown content to the console.
+css_schema = JsonCssExtractionStrategy.generate_schema(
+    sample_html,
+    schema_type=Restaurant.model_json_schema(),
+    llm_config=LLMConfig(
+        provider="openai/gpt-4o-mini",
+        api_token=os.getenv("OPENAI_API_KEY"),
+    )
+)
 
-    Args:
-        url (str): The URL of the web page to scrape.
-    """
-    async with AsyncWebCrawler() as crawler:
-        result = await crawler.arun(
-            url=url,
-        )
-        print(result.markdown)
+strategy = JsonCssExtractionStrategy(schema=css_schema, verbose=True)
+    
+async def extract_restaurant_data(url:str):
 
-async def crawl_recursive_batch(start_urls, max_depth=3, max_concurrent=10):
-    """
-    Recursively scrapes web pages in batches, starting from a list of initial URLs.
-
-    This function performs a breadth-first crawl up to a specified maximum depth.
-    It uses a memory-adaptive dispatcher to manage concurrent browser sessions
-    and avoids re-visiting URLs.
-
-    Args:
-        start_urls (list[str]): A list of URLs to begin crawling from.
-        max_depth (int, optional): The maximum recursion depth for the crawl. Defaults to 3.
-        max_concurrent (int, optional): The maximum number of concurrent browser
-                                     sessions. Defaults to 10.
-    """
-    browser_config = BrowserConfig(headless=True, verbose=False)
-    run_config = CrawlerRunConfig(
+    config = CrawlerRunConfig(
+        extraction_strategy=strategy,
         cache_mode=CacheMode.BYPASS,
-        stream=False
-    )
-    dispatcher = MemoryAdaptiveDispatcher(
-        memory_threshold_percent=70.0,      # Don't exceed 70% memory usage
-        check_interval=1.0,                 # Check memory every second
-        max_session_permit=max_concurrent   # Max parallel browser sessions
     )
 
-    # Track visited URLs to prevent revisiting and infinite loops (ignoring fragments)
-    visited = set()
-    def normalize_url(url):
-        # Remove fragment (part after #)
-        return urldefrag(url)[0]
-    current_urls = set([normalize_url(u) for u in start_urls])
-
-    async with AsyncWebCrawler(config=browser_config) as crawler:
-        for depth in range(max_depth):
-            print(f"\n=== Crawling Depth {depth+1} ===")
-            # Only crawl URLs we haven't seen yet (ignoring fragments)
-            urls_to_crawl = [normalize_url(url) for url in current_urls if normalize_url(url) not in visited]
-
-            if not urls_to_crawl:
-                break
-
-            # Batch-crawl all URLs at this depth in parallel
-            results = await crawler.arun_many(
-                urls=urls_to_crawl,
-                config=run_config,
-                dispatcher=dispatcher
-            )
-
-            next_level_urls = set()
-
-            for result in results:
-                norm_url = normalize_url(result.url)
-                visited.add(norm_url)  # Mark as visited (no fragment)
-                if result.success:
-                    print(f"[OK] {result.url} | Markdown: {len(result.markdown) if result.markdown else 0} chars")
-                    # Collect all new internal links for the next depth
-                    for link in result.links.get("internal", []):
-                        next_url = normalize_url(link["href"])
-                        if next_url not in visited:
-                            next_level_urls.add(next_url)
-                else:
-                    print(f"[ERROR] {result.url}: {result.error_message}")
-                    
-            # Move to the next set of URLs for the next recursion depth
-            current_urls = next_level_urls
-
-async def extract_restaurants(url:str):
-    ...
+    print(f"Generated Schema: {json.dumps(css_schema, indent=2)}")
     
 
-if __name__ == "__main__":
-    load_dotenv()
-    url = "https://www.google.com/search?q=porto+restaurants&client=firefox-b-d&sca_esv=86c72741684d2a2b&udm=1&sxsrf=AE3TifPt__DT1uW2DpU9qdB4Y6006XwiLw:1751223130198&ei=WothaL3yC9-pkdUPruCXyQ4&start=0&sa=N&sstk=Ac65TH7LbB8oei00wKy9xaZeVdwy6h6HgnvwFuvsZMA9zoli9a0iU7hYDiywJYjXK9ZhG8hl5IzmtDMUJm1h3p2G9XYPr6m1xk2cRagqZzvgvbEg9H0ei0rNCvFd_dkMc2p_&ved=2ahUKEwi9h-TEppeOAxXfVKQEHS7wJek4ChDx0wN6BAgJEAI&biw=2300&bih=1172&dpr=1.09"
-    asyncio.run(crawl_single_page(url))
-    # asyncio.run(crawl_recursive_batch([url], max_depth=3, max_concurrent=10))
+    async with AsyncWebCrawler(config=BrowserConfig(headless=True)) as crawler:
+        result = await crawler.arun(
+            url=url,
+            config=config
+        )   
+
+    if not result.success:
+        print(f"Error crawling {url}: {result.error_message}")
+        return None
+
+    data = json.loads(result.extracted_content)
+    print(data[0])
+
+
+

@@ -141,13 +141,83 @@ async def extract_restaurant_data(url:str) -> dict:
 async def extract_restaurant_details_data(url:str):
     url_format = "https://www.tripadvisor.com/Restaurant_Review-g189180-d26193740-Reviews-Taberna_dos_Fernandes-Porto_Porto_District_Northern_Portugal.html"
 
+
     schema_desc = {
-        "name": "Restaurant Description",
-        "baseSelector": "[id='GAI_REVIEWS']",
+        "name": "Restaurant Complete Info",
+        "baseSelector": "body",
         "fields": [
             {
-            "name": "description",
-            "selector": ".IGaaH",
+            "name": "restaurant_name",
+            "selector": "h1.biGQs._P.hzzSG.rRtyp",
+            "type": "text"
+            },
+            {
+            "name": "rating",
+            "selector": "[data-automation='bubbleRatingValue'] span",
+            "type": "text"
+            },
+            {
+            "name": "review_count",
+            "selector": "[data-automation='bubbleReviewCount'] span",
+            "type": "text"
+            },
+            {
+            "name": "ranking",
+            "selector": ".diZaT b span",
+            "type": "text"
+            },
+            {
+            "name": "cuisine_types",
+            "selector": ".cPbcf .bTeln a",
+            "type": "text"
+            },
+            {
+            "name": "price_range",
+            "selector": ".cPbcf .bTeln a[href*='zfp']",
+            "type": "text"
+            },
+            {
+            "name": "features",
+            "selector": "[data-automation='OVERVIEW_TAB_ELEMENT'] .biGQs._P.pZUbB.avBIb.KxBGd .alXOW.EEXWj",
+            "type": "text"
+            },
+            {
+            "name": "review_insights",
+            "selector": ".CUmiT.z._S",
+            "type": "list",
+            "fields": [
+                {
+                    "name": "category",
+                    "selector": ".cNEUC.o.W .biGQs._P.pZUbB.hmDzD",
+                    "type": "text"
+                },
+                {
+                    "name": "rating",
+                    "selector": ".cNEUC.o.W .biGQs._P.kdCdj.xARtZ.XWJSj.Wb",
+                    "type": "text"
+                }
+            ]
+            },
+            {
+            "name": "hours",
+            "selector": "[data-automation='hours-section'] .f.e.Q3 .f",
+            "type": "list",
+            "fields": [
+                {
+                    "name": "day",
+                    "selector": ".cGgaa.Nk .biGQs._P.pZUbB.fOtGX, .cGgaa.Nk .biGQs._P.fiohW.fOtGX",
+                    "type": "text"
+                },
+                {
+                    "name": "times",
+                    "selector": ".f.e span, .biGQs._P.pZUbB.KxBGd:not(.fOtGX):not(.fiohW)",
+                    "type": "text"
+                }
+            ]
+            },
+            {
+            "name": "review_summary",
+            "selector": "[id='GAI_REVIEWS'] .IGaaH._u._c .biGQs._P.pZUbB.KxBGd",
             "type": "text"
             }
         ]
@@ -171,7 +241,74 @@ async def extract_restaurant_details_data(url:str):
         return None
     
     # Debug print after success check
+    if "Jump to all reviews" in result.extracted_content:
+        result.extracted_content = result.extracted_content.replace("Jump to all reviews", "")
+
     print("Markdown result:", result.extracted_content)
     
+    data = json.loads(result.extracted_content)
+    return data
+
+async def extract_reviews_data(url: str) -> list:
+    url = "https://www.tripadvisor.com/Restaurant_Review-g189180-d26193740-Reviews-Taberna_dos_Fernandes-Porto_Porto_District_Northern_Portugal.html"
+    """
+    Extract reviews from a page containing review cards with data-automation="reviewCard"
+    """
+    schema = {
+        "name": "Reviews List",
+        "baseSelector": ".zwgAY",
+        "type": "list",
+        "fields": [
+            {
+                "name": "review_title",
+                "selector": "[data-test-target='review-title'] .biGQs._P.fiohW.qWPrE.ncFvv.fOtGX a",
+                "type": "text"
+            },
+            {
+                "name": "review_text",
+                "selector": "[data-test-target='review-body'] .biGQs._P.pZUbB.KxBGd .JguWG",
+                "type": "text"
+            }
+        ]
+    }
+    
+    strategy = JsonCssExtractionStrategy(schema=schema, verbose=True)
+
+    config = CrawlerRunConfig(
+        extraction_strategy=strategy,
+        cache_mode=CacheMode.BYPASS,
+    )
+
+    async with AsyncWebCrawler(config=BrowserConfig(headless=True)) as crawler:
+        result = await crawler.arun(
+            url=url,
+            config=config
+        )   
+    
+    if not result.success:
+        print(f"Error crawling reviews from {url}: {result.error_message}")
+        return None
+    
+    """
+    Data JSON schema will be a list of review objects:
+    [
+        {
+        "review_title": "Blown away!",
+        "review_text": "We had no idea that the restaurant we were about to have a long, boozy lunch in was a Michelin star level establishment disguised as a typical taberna. 
+        The restaurant is in the heart of the Ribera district/tourist area, so our expectations were set accordingly, and incorrectly. 
+        The atmosphere is very unique, with a beautifully lit ceiling that resembles the hull of an inverted boat. 
+        My husband and I split fried sardines and an octopus salad to start. The sardines were deliciously delicate and the octopus almost melted in your mouth. 
+        The octopus was immersed in a finely diced, pico de gallo-like sauce that was bright and refreshing. For the mains, my husband had the prawns and 
+        I had the fish of the day, a grilled sea bream. The server was a true artisan who filleted my fish impeccably. 
+        The fish was served with potatoes and sautéed vegetables that were seasoned to perfection. 
+        The fish was moist, delicate, and so wonderfully flavored with what I can only imagine was lemon, garlic, olive oil and salt. We were blown away. T
+        he prawns were the best we’d had in Portugal. It was our last day in Porto, but had we been here on our first day, we would have come back again and again. 
+        The lovely family that runs all aspects of the restaurant (chef and servers) are experts in their craft of hospitality and cooking. ~
+        We are extremely grateful and lucky to have found this gem."
+        }
+        ...
+    ]
+    """
+    print("Markdown result:", result.extracted_content)
     data = json.loads(result.extracted_content)
     return data

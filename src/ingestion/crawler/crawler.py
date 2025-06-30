@@ -139,24 +139,16 @@ async def extract_restaurant_data(url:str) -> dict:
 
 
 async def extract_restaurant_details_data(url:str):
-    url_format = "https://www.tripadvisor.com" + url
+    url_format = "https://www.tripadvisor.com/Restaurant_Review-g189180-d26193740-Reviews-Taberna_dos_Fernandes-Porto_Porto_District_Northern_Portugal.html"
 
     schema_desc = {
         "name": "Restaurant Description",
-        "baseSelector": ".zTRGA",
-        "selector": "[id='GAI_REVIEWS']",
+        "baseSelector": "[id='GAI_REVIEWS']",
         "fields": [
             {
-            "name": "reviews",
-            "selector": ".aaQZA",
-            "type": "nested",
-            "fields": [
-                    {
-                        "name": "description",
-                        "selector": ".biGQs._P.pZUbB.KxBGd",
-                        "type": "text"
-                    },
-                ]
+            "name": "description",
+            "selector": ".IGaaH",
+            "type": "text"
             }
         ]
     }

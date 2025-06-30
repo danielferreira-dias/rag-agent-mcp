@@ -18,7 +18,7 @@ async def main():
     url = "https://www.tripadvisor.com/FindRestaurants?geo=189180&offset=0&sort=FEATURED&establishmentTypes=10591&broadened=false"
     # await crawl_single_page(url)
     # data = await extract_restaurant_data(url)
-    data = await extract_restaurant_details_data("url")
+    data = await extract_restaurant_details_data(url)
     # data_processed = process_restaurant_data(data)
     # print(data_processed[0].model_dump_json())
     

@@ -6,8 +6,9 @@ This avoids import issues by running from the correct directory.
 
 import asyncio
 from dotenv import load_dotenv
-from src.ingestion.crawler import extract_restaurant_data
-from src.ingestion.crawler_examples import crawl_single_page
+from src.ingestion.crawler.crawler import extract_restaurant_data, extract_restaurant_details_data
+from src.ingestion.crawler.crawler_examples import crawl_single_page
+from src.ingestion.processing.process import process_restaurant_data
 
 
 async def main():
@@ -16,7 +17,10 @@ async def main():
     
     url = "https://www.tripadvisor.com/FindRestaurants?geo=189180&offset=0&sort=FEATURED&establishmentTypes=10591&broadened=false"
     # await crawl_single_page(url)
-    await extract_restaurant_data(url)
+    # data = await extract_restaurant_data(url)
+    data = await extract_restaurant_details_data("url")
+    # data_processed = process_restaurant_data(data)
+    # print(data_processed[0].model_dump_json())
     
     # Uncomment the lines below to run other functions:
     # print("Running crawler with LLM extraction...")

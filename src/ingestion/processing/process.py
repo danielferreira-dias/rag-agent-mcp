@@ -11,12 +11,15 @@ pricing_tier = {
 }
 
 def process_restaurant_data(data_dict: list[dict]) -> list[Restaurant]:
+    restaurants = []
+    print(data_dict)
     for data in data_dict:
-        restaurant = Restaurant(
+        restaurants.append(Restaurant(
             name=data["restaurant_name"],
             rating=data["rating"],
-            cuisine=data["cuisine"],
-            price_range=data["price_range"],
-            restaurant_url=data["restaurant_url"]
-        )
+            cuisine_type=data["cuisine_type"],
+            price_range=pricing_tier[data["price_range"]],
+            restaurant_url=data["restaurant_url"],
+        ))
+    return restaurants
 

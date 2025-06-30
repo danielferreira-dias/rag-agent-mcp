@@ -6,40 +6,8 @@ from urllib.parse import urldefrag
 from crawl4ai import (AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode,
     MemoryAdaptiveDispatcher, LLMConfig)
 from crawl4ai.extraction_strategy import JsonCssExtractionStrategy, JsonXPathExtractionStrategy
-from .models.models import Restaurant
-
-schema = {
-  "name": "Restaurant Listings",
-  "baseSelector": ".XIWnB.z.y",
-  "fields": [
-    {
-    "name": "restaurant_name",
-    "selector": "div.fiohW",
-    "type": "text"
-    },
-    {
-      "name": "rating",
-      "selector": "div[data-automation='bubbleRatingValue'] span",
-      "type": "text"
-    },
-    {
-      "name": "cuisine",
-      "selector": "span.biGQs._P.pZUbB.hmDzD:nth-of-type(1)",
-      "type": "text"
-    },
-    {
-      "name": "price_range",
-      "selector": "span.biGQs._P.pZUbB.hmDzD:nth-of-type(2)",
-      "type": "text"
-    },
-    {
-      "name": "restaurant_url",
-      "selector": "a.BMQDV",
-      "type": "attribute",
-      "attribute": "href"
-    }
-  ]
-}
+from src.ingestion.crawler.crawler_examples import crawl_single_page
+from src.ingestion.models.models import Restaurant
 
 sample_html = """
 <div class="vkMWZ _T Fl y">
@@ -106,13 +74,45 @@ sample_html = """
 #     )
 # )
 
-strategy = JsonCssExtractionStrategy(schema=schema, verbose=True)
 
-async def extract_restaurant_data(url:str):
+async def extract_restaurant_data(url:str) -> dict:
+    """
+    Schema to fetch the elements from the page:
+    """
+    schema = {
+        "name": "Restaurant Listings",
+        "baseSelector": ".XIWnB.z.y",
+        "fields": [
+            {
+            "name": "restaurant_name",
+            "selector": "div.fiohW",
+            "type": "text"
+            },
+            {
+            "name": "rating",
+            "selector": "[data-automation='bubbleRatingValue'] span",
+            "type": "text"
+            },
+            {
+            "name": "cuisine_type",
+            "selector": "span.biGQs._P.pZUbB.hmDzD",
+            "type": "text"
+            },
+            {
+            "name": "restaurant_url",
+            "selector": "a.BMQDV",
+            "type": "attribute",
+            "attribute": "href"
+            }
+        ]
+    }
+    strategy = JsonCssExtractionStrategy(schema=schema, verbose=True)
+
     config = CrawlerRunConfig(
         extraction_strategy=strategy,
         cache_mode=CacheMode.BYPASS,
     )
+
     async with AsyncWebCrawler(config=BrowserConfig(headless=True)) as crawler:
         result = await crawler.arun(
             url=url,
@@ -121,8 +121,65 @@ async def extract_restaurant_data(url:str):
     if not result.success:
         print(f"Error crawling {url}: {result.error_message}")
         return None
+    
+    
+    """
+    Data JSON schema:
+    {
+        'restaurant_name': '1. O Buraco', 
+        'rating': '4.2', 
+        'cuisine_type': 'Mediterranean, European', 
+        'restaurant_url': '/Restaurant_Review-g189180-d2419164-Reviews-O_Buraco-Porto_Porto_District_Northern_Portugal.html'
+    }
+    """
     data = json.loads(result.extracted_content)
-    print(data)
+    data_details = await extract_restaurant_details_data(data[0]['restaurant_url'])
+    print("Initial data -> ", data[0])
+    print("Initial data descritpion -> ", data_details)
 
 
+async def extract_restaurant_details_data(url:str):
+    url_format = "https://www.tripadvisor.com" + url
 
+    schema_desc = {
+        "name": "Restaurant Description",
+        "baseSelector": ".zTRGA",
+        "selector": "[id='GAI_REVIEWS']",
+        "fields": [
+            {
+            "name": "reviews",
+            "selector": ".aaQZA",
+            "type": "nested",
+            "fields": [
+                    {
+                        "name": "description",
+                        "selector": ".biGQs._P.pZUbB.KxBGd",
+                        "type": "text"
+                    },
+                ]
+            }
+        ]
+    }
+
+    strategy = JsonCssExtractionStrategy(schema=schema_desc, verbose=True)
+
+    config = CrawlerRunConfig(
+        extraction_strategy=strategy,
+        cache_mode=CacheMode.BYPASS,
+    )
+
+    async with AsyncWebCrawler() as crawler:
+        result = await crawler.arun(
+            url=url_format,
+            config=config
+        )   
+
+    if not result.success:
+        print(f"Error crawling {url}: {result.error_message}")
+        return None
+    
+    # Debug print after success check
+    print("Markdown result:", result.extracted_content)
+    
+    data = json.loads(result.extracted_content)
+    return data

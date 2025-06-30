@@ -5,9 +5,10 @@ class Restaurant(BaseModel):
     name: str
     description: Optional[str]
     address: str
-    cuisine: Optional[str]
+    cuisine_type: Optional[str]
     rating: Optional[float]
     price_range: Optional[str]
+    michelin_star: Optional[str]
 
 class Monument(BaseModel):
     name: str

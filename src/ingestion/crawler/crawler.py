@@ -5,8 +5,41 @@ from dotenv import load_dotenv
 from urllib.parse import urldefrag
 from crawl4ai import (AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode,
     MemoryAdaptiveDispatcher, LLMConfig)
-from crawl4ai.extraction_strategy import JsonCssExtractionStrategy, LLMExtractionStrategy
+from crawl4ai.extraction_strategy import JsonCssExtractionStrategy, JsonXPathExtractionStrategy
 from .models.models import Restaurant
+
+schema = {
+  "name": "Restaurant Listings",
+  "baseSelector": ".XIWnB.z.y",
+  "fields": [
+    {
+    "name": "restaurant_name",
+    "selector": "div.fiohW",
+    "type": "text"
+    },
+    {
+      "name": "rating",
+      "selector": "div[data-automation='bubbleRatingValue'] span",
+      "type": "text"
+    },
+    {
+      "name": "cuisine",
+      "selector": "span.biGQs._P.pZUbB.hmDzD:nth-of-type(1)",
+      "type": "text"
+    },
+    {
+      "name": "price_range",
+      "selector": "span.biGQs._P.pZUbB.hmDzD:nth-of-type(2)",
+      "type": "text"
+    },
+    {
+      "name": "restaurant_url",
+      "selector": "a.BMQDV",
+      "type": "attribute",
+      "attribute": "href"
+    }
+  ]
+}
 
 sample_html = """
 <div class="vkMWZ _T Fl y">
@@ -64,39 +97,32 @@ sample_html = """
 </div>
 """
 
-css_schema = JsonCssExtractionStrategy.generate_schema(
-    sample_html,
-    schema_type=Restaurant.model_json_schema(),
-    llm_config=LLMConfig(
-        provider="openai/gpt-4o-mini",
-        api_token=os.getenv("OPENAI_API_KEY"),
-    )
-)
+# css_schema = JsonCssExtractionStrategy.generate_schema(
+#     sample_html,
+#     schema_type=Restaurant.model_json_schema(),
+#     llm_config=LLMConfig(
+#         provider="openai/gpt-4o-mini",
+#         api_token=os.getenv("OPENAI_API_KEY"),
+#     )
+# )
 
-strategy = JsonCssExtractionStrategy(schema=css_schema, verbose=True)
-    
+strategy = JsonCssExtractionStrategy(schema=schema, verbose=True)
+
 async def extract_restaurant_data(url:str):
-
     config = CrawlerRunConfig(
         extraction_strategy=strategy,
         cache_mode=CacheMode.BYPASS,
     )
-
-    print(f"Generated Schema: {json.dumps(css_schema, indent=2)}")
-    
-
     async with AsyncWebCrawler(config=BrowserConfig(headless=True)) as crawler:
         result = await crawler.arun(
             url=url,
             config=config
         )   
-
     if not result.success:
         print(f"Error crawling {url}: {result.error_message}")
         return None
-
     data = json.loads(result.extracted_content)
-    print(data[0])
+    print(data)
 
 
 

@@ -6,7 +6,7 @@ This avoids import issues by running from the correct directory.
 
 import asyncio
 from dotenv import load_dotenv
-from src.ingestion.crawler.crawler import extract_restaurant_data, extract_restaurant_details_data, extract_reviews_data
+from src.ingestion.crawler.crawler import extract_restaurant_data, extract_restaurant_details_data
 from src.ingestion.crawler.crawler_examples import crawl_single_page
 from src.ingestion.processing.process import process_restaurant_data
 

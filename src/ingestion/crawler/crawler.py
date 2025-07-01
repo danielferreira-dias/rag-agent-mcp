@@ -232,10 +232,11 @@ async def extract_restaurant_details_data(url:str):
         "attribute": "href"
         },
         {
-            "name": "user_reviews",
-            "selector": "div[data-automation='reviewCard']",
-            "type": "nested_list",
-            "fields": [
+        "name": "user_reviews",
+        "selector": "section#REVIEWS_LIST div[data-automation='reviewCard']",
+        "type": "nested_list",
+        "limit": 5,
+        "fields": [
                 {
                     "name": "author_name",
                     "selector": "a.ukgoS",
@@ -243,7 +244,7 @@ async def extract_restaurant_details_data(url:str):
                 },
                 {
                     "name": "author_info",
-                    "selector": "div.vYLts",
+                    "selector": ".vYLts",
                     "type": "text"
                 },
                 {
@@ -253,12 +254,12 @@ async def extract_restaurant_details_data(url:str):
                 },
                 {
                     "name": "title",
-                    "selector": "div[data-test-target='review-title'] a",
+                    "selector": "[data-test-target='review-title']",
                     "type": "text"
                 },
                 {
                     "name": "date_of_visit",
-                    "selector": "div.IlciT",
+                    "selector": ".IlciT",
                     "type": "text"
                 },
                 {
@@ -268,7 +269,7 @@ async def extract_restaurant_details_data(url:str):
                 }
             ]
         }
-    ]
+        ]   
     }
 
     strategy = JsonCssExtractionStrategy(schema=schema_desc, verbose=True)

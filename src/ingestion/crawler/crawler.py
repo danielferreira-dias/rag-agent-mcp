@@ -158,7 +158,7 @@ async def extract_restaurant_details_data(url:str):
         },
         {
         "name": "review_count",
-        "selector": "a[href='#REVIEWS'] [data-automation='bubbleReviewCount']",
+        "selector": "[data-automation='bubbleReviewCount']",
         "type": "text"
         },
         {
@@ -168,23 +168,40 @@ async def extract_restaurant_details_data(url:str):
         },
         {
         "name": "cuisine_types",
-        "selector": "span.cPbcf span.bTeln:not(:last-of-type) a",
+        "selector": "span.cPbcf > span.bTeln:not(:last-of-type) a",
         "type": "list"
         },
         {
         "name": "price_range",
-        "selector": "span.cPbcf span.bTeln:last-of-type a",
+        "selector": "span.cPbcf > span.bTeln:last-of-type a",
         "type": "text"
         },
         {
         "name": "features",
-        "selector": "div.BrqJv div.TSYox",
+        "selector": "div.BrqJv div.sxnyJ",
         "type": "list"
         },
         {
         "name": "review_summary",
         "selector": "div.aaQZA div.IGaaH",
         "type": "text"
+        },
+        {
+            "name": "ai_highlights",
+            "selector": "div.OykfZ div.CUmiT",
+            "type": "nested_list",
+            "fields": [
+                {
+                    "name": "category",
+                    "selector": "span.ZNjnF",
+                    "type": "text"
+                },
+                {
+                    "name": "value",
+                    "selector": "span.ezezH",
+                    "type": "text"
+                }
+            ]
         },
         {
         "name": "schedule",
@@ -213,6 +230,43 @@ async def extract_restaurant_details_data(url:str):
         "selector": "a[data-automation='restaurantsWebsiteButton']",
         "type": "attribute",
         "attribute": "href"
+        },
+        {
+            "name": "user_reviews",
+            "selector": "div[data-automation='reviewCard']",
+            "type": "nested_list",
+            "fields": [
+                {
+                    "name": "author_name",
+                    "selector": "a.ukgoS",
+                    "type": "text"
+                },
+                {
+                    "name": "author_info",
+                    "selector": "div.vYLts",
+                    "type": "text"
+                },
+                {
+                    "name": "rating",
+                    "selector": "svg[data-automation='bubbleRatingImage'] title",
+                    "type": "text"
+                },
+                {
+                    "name": "title",
+                    "selector": "div[data-test-target='review-title'] a",
+                    "type": "text"
+                },
+                {
+                    "name": "date_of_visit",
+                    "selector": "div.IlciT",
+                    "type": "text"
+                },
+                {
+                    "name": "review_text",
+                    "selector": "span.JguWG",
+                    "type": "text"
+                }
+            ]
         }
     ]
     }

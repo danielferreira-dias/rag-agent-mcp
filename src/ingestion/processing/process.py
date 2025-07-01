@@ -23,3 +23,4 @@ def process_restaurant_data(data_dict: list[dict]) -> list[Restaurant]:
         ))
     return restaurants
 
+

@@ -1,6 +1,5 @@
 from urllib.parse import urldefrag
-from crawl4ai import (AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode, MemoryAdaptiveDispatcher)
-
+from crawl4ai import (AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode, DefaultMarkdownGenerator, MemoryAdaptiveDispatcher)
 
 async def crawl_single_page(url:str):
     """
@@ -12,11 +11,24 @@ async def crawl_single_page(url:str):
     Args:
         url (str): The URL of the web page to scrape.
     """
+    md_generator = DefaultMarkdownGenerator(
+        options={
+            "ignore_links": True,
+            "escape_html": False,
+            "body_width": 80
+        }
+    )
+
+    config = CrawlerRunConfig(
+        markdown_generator=md_generator
+    )
+
     async with AsyncWebCrawler() as crawler:
         result = await crawler.arun(
             url=url,
+            config=config
         )
-        print(result.markdown)
+
 
 async def crawl_recursive_batch(start_urls, max_depth=3, max_concurrent=10):
     """

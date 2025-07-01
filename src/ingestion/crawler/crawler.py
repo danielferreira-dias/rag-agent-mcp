@@ -139,8 +139,8 @@ async def extract_restaurant_data(url:str) -> dict:
 
 
 async def extract_restaurant_details_data(url:str):
-    url_format = "https://www.tripadvisor.com/Restaurant_Review-g189180-d26193740-Reviews-Taberna_dos_Fernandes-Porto_Porto_District_Northern_Portugal.html"
-
+    url_format = "https://www.tripadvisor.com/Restaurant_Review-g189180-d25174448-Reviews-Culto_Ao_Bacalhau-Porto_Porto_District_Northern_Portugal.html"
+    browser_config = BrowserConfig(browser_type="chromium", headless=True)
 
     schema_desc = {
     "name": "Restaurant Complete Info",
@@ -150,6 +150,33 @@ async def extract_restaurant_details_data(url:str):
         "name": "restaurant_name",
         "selector": "h1.hzzSG",
         "type": "text"
+        },
+        {
+        "name": "about_section",
+        "selector": "div[data-automation='OVERVIEW_TAB_ELEMENT']",
+        "type": "nested_object",
+        "fields": [
+                {
+                "name": "title",
+                "selector": ".NbcSk > .biGQs",
+                "type": "text"
+                },
+                {
+                "name": "description",
+                "selector": ".biGQs._P.pZUbB.avBIb.AWdfh",
+                "type": "text"
+                },
+                {
+                "name": "travelers_choice_year",
+                "selector": ".EFIqf .AWdfh",
+                "type": "text"
+                },
+                {
+                "name": "features_preview",
+                "selector": ".BrqJv .TSYox",
+                "type": "list"
+                }
+            ]
         },
         {
         "name": "rating",
@@ -175,11 +202,6 @@ async def extract_restaurant_details_data(url:str):
         "name": "price_range",
         "selector": "span.cPbcf > span.bTeln:last-of-type a",
         "type": "text"
-        },
-        {
-        "name": "features",
-        "selector": "div.BrqJv div.sxnyJ",
-        "type": "list"
         },
         {
         "name": "review_summary",
@@ -221,54 +243,31 @@ async def extract_restaurant_details_data(url:str):
         ]
         },
         {
-        "name": "address",
-        "selector": "span[data-automation='restaurantsMapLinkOnName']",
-        "type": "text"
-        },
-        {
-        "name": "website",
-        "selector": "a[data-automation='restaurantsWebsiteButton']",
-        "type": "attribute",
-        "attribute": "href"
-        },
-        {
-        "name": "user_reviews",
-        "selector": "section#REVIEWS_LIST div[data-automation='reviewCard']",
-        "type": "nested_list",
-        "limit": 5,
-        "fields": [
-                {
-                    "name": "author_name",
-                    "selector": "a.ukgoS",
-                    "type": "text"
-                },
-                {
-                    "name": "author_info",
-                    "selector": ".vYLts",
-                    "type": "text"
-                },
-                {
-                    "name": "rating",
-                    "selector": "svg[data-automation='bubbleRatingImage'] title",
-                    "type": "text"
-                },
-                {
-                    "name": "title",
-                    "selector": "[data-test-target='review-title']",
-                    "type": "text"
-                },
-                {
-                    "name": "date_of_visit",
-                    "selector": ".IlciT",
-                    "type": "text"
-                },
-                {
-                    "name": "review_text",
-                    "selector": "span.JguWG",
-                    "type": "text"
-                }
-            ]
-        }
+            "name": "address",
+            "selector": "span[data-automation='restaurantsMapLinkOnName']",
+            "type": "text"
+            },
+            {
+            "name": "website",
+            "selector": "a[data-automation='restaurantsWebsiteButton']",
+            "type": "attribute",
+            "attribute": "href"
+            },
+            {
+            "name": "detailed_cuisines",
+            "selector": ".qXeDC .iPiKu:nth-child(1) .AWdfh",
+            "type": "text"
+            },
+            {
+                "name": "meal_types",
+                "selector": ".qXeDC .iPiKu:nth-child(2) .AWdfh",
+                "type": "text"
+            },
+            {
+                "name": "special_diets",
+                "selector": ".qXeDC .iPiKu:nth-child(3) .AWdfh",
+                "type": "text"
+            },
         ]   
     }
 
@@ -279,7 +278,7 @@ async def extract_restaurant_details_data(url:str):
         cache_mode=CacheMode.BYPASS,
     )
 
-    async with AsyncWebCrawler() as crawler:
+    async with AsyncWebCrawler(config=browser_config) as crawler:
         result = await crawler.arun(
             url=url_format,
             config=config

@@ -16,7 +16,7 @@ async def main():
     """Main function to run the crawler."""
     load_dotenv()
     url_restaurants = "https://www.tripadvisor.com/Restaurants-g189180-Porto_Porto_District_Northern_Portugal.html"
-    url_landmarks = "https://www.tripadvisor.com/Attractions-g189180-Activities-c47-Porto_Porto_District_Northern_Portugal.html"
+    url_landmarks = "https://www.tripadvisor.com/Attractions-g189180-Activities-a_allAttractions.true-Porto_Porto_District_Northern_Portugal.html"
     data = await extract_landmark_data(url_landmarks)
     # process_restaurant_data(data)
    

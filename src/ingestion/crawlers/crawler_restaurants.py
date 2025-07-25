@@ -84,7 +84,7 @@ async def extract_restaurant_data(url:str) -> dict:
     # Process each restaurant and add its details
     for i, data in enumerate(data_list):
         data_details = await extract_restaurant_details_data(data['restaurant_url'])
-        data_list[i]['metadata'] = data_details
+        data_list[i]['details'] = data_details
 
         data_review = await extract_restaurant_reviews(data['restaurant_url'])
         data_list[i]['reviews'] = data_review
@@ -198,6 +198,28 @@ async def extract_restaurant_details_data(url:str):
             "selector": ".qXeDC .iPiKu:nth-child(3) .AWdfh",
             "type": "text"
         },
+        {
+            "name": "menu",
+            "selector": "div.WmwGC div.Jyhuy.w",
+            "type": "list",
+            "fields": [
+                {
+                    "name": "menu_item_name",
+                    "selector": "div.zENAB",
+                    "type": "text"
+                },
+                {
+                    "name": "menu_item_price",
+                    "selector": "div.ksfIO.K",
+                    "type": "text"
+                },
+                {
+                    "name": "menu_item_desc",
+                    "selector": "div.zENAB > div.biGQs._P.pZUbB.AWdfh",
+                    "type": "text"
+                }
+            ]
+        }
         ]   
     }
 

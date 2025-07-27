@@ -2,7 +2,6 @@ import json
 import os
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig, JsonCssExtractionStrategy
 
-
 async def extract_activity_data(url:str) -> dict:
     """
     Schema to fetch the elements from the page:
@@ -165,9 +164,21 @@ async def extract_activity_details(url:str) -> dict:
         "type": "text",
         },
         {
-        "name": "additional_info",
+        "name": "whats_included",
         "selector": ".tyUdl ul.IMSns",
         "type": "text",
+        },
+        {
+        "name": "additional_info",
+        "selector": "dt:nth-of-type(4) + dd ul.IMSns li.seKux",
+        "type": "nested_list",
+        "fields": [
+            {
+            "name": "point",
+            "selector": "span",
+            "type": "text",
+            },
+        ]
         },
     ]
     }

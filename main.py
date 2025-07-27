@@ -19,7 +19,9 @@ async def main():
     url_restaurants = "https://www.tripadvisor.com/Restaurants-g189180-Porto_Porto_District_Northern_Portugal.html"
     url_landmarks = "https://www.tripadvisor.com/Attractions-g189180-Activities-a_allAttractions.true-Porto_Porto_District_Northern_Portugal.html"
     url_activities = "https://www.tripadvisor.com/Attractions-g189180-Activities-c61-Porto_Porto_District_Northern_Portugal.html"
-    data = await extract_activity_data(url_activities)
+    url_tours = "https://www.tripadvisor.com/Attractions-g189180-Activities-c42-Porto_Porto_District_Northern_Portugal.html"
+    url_concerts = "https://www.tripadvisor.com/Attractions-g189180-Activities-c58-Porto_Porto_District_Northern_Portugal.html"
+    data = await extract_activity_data(url_concerts)
     # process_restaurant_data(data)
    
 
